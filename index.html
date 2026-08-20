@@ -1,0 +1,39 @@
+random() * (canvas.width / grid)) * grid;
+            food.y = Math.floor(Math.random() * (canvas.height / grid)) * grid;
+            food.type = Math.random() < 0.3 ? 'coin' : 'apple';
+        }
+
+        function drawFood() {
+            ctx.fillStyle = food.type === 'apple' ? '#ff0000' : '#ffe600';
+            ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
+        }
+
+        function checkGameOver() {
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            }
+            return snake[0].x < 0  snake[0].x >= canvas.width  snake[0].y < 0 || snake[0].y >= canvas.height;
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            running = false;
+            document.getElementById("startBtn").innerText = "Play Again";
+            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff007f";
+            ctx.font = "24px 'Courier New'";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (changingDir) return;
+            if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; changingDir = true; }
+            if (e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -grid; changingDir = true; }
+            if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; changingDir = true; }
+            if (e.key === "ArrowDown" && dy === 0) { dx = 0; dy = grid; changingDir = true; }
+        });
+    </script>
+</body>
+</html>
