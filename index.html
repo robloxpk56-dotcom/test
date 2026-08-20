@@ -1,75 +1,39 @@
-}
-
-        function animate() {
-            requestAnimationFrame(animate);
-
-            if (!gameActive) return;
-
-            // Smooth ship movement between lanes
-            shipX += (targetShipX - shipX) * 0.2;
-            ship.position.x = shipX;
-            ship.rotation.z = - (shipX - targetShipX) * 0.5;
-
-            spawnEntities();
-
-            // Move and check Coins
-            for (let i = coins.length - 1; i >= 0; i--) {
-                coins[i].position.z += speed;
-                coins[i].rotation.y += 0.05;
-
-                // Collision detection with player
-                if (coins[i].position.z > -0.5 && coins[i].position.z < 0.5) {
-                    if (Math.abs(coins[i].position.x - ship.position.x) < 0.6) {
-                        scene.remove(coins[i]);
-                        coins.splice(i, 1);
-                        score += 10;
-                        document.getElementById('coin-count').innerText = score;
-                        if (score > highScore) {
-                            highScore = score;
-                            document.getElementById('high-score').innerText = highScore;
-                        }
-                        speed += 0.005; // Gradually speed up game
-                        continue;
-                    }
-                }
-
-                // Remove out of bounds
-                if (coins[i] && coins[i].position.z > 5) {
-                    scene.remove(coins[i]);
-                    coins.splice(i, 1);
-                }
-            }
-
-            // Move and check Obstacles
-            for (let i = obstacles.length - 1; i >= 0; i--) {
-                obstacles[i].position.z += speed;
-                obstacles[i].rotation.x += 0.02;
-
-                // Crash detection
-                if (obstacles[i].position.z > -0.5 && obstacles[i].position.z < 0.5) {
-                    if (Math.abs(obstacles[i].position.x - ship.position.x) < 0.6) {
-                        gameOver();
-                    }
-                }
-
-                if (obstacles[i] && obstacles[i].position.z > 5) {
-                    scene.remove(obstacles[i]);
-                    obstacles.splice(i, 1);
-                }
-            }
-
-            renderer.render(scene, camera);
+random() * (canvas.width / grid)) * grid;
+            food.y = Math.floor(Math.random() * (canvas.height / grid)) * grid;
+            food.type = Math.random() < 0.3 ? 'coin' : 'apple';
         }
 
-        function gameOver() {
-            gameActive = false;
-            const overlay = document.getElementById('overlay');
-            overlay.style.display = 'flex';
-            overlay.querySelector('h1').innerText = "CRASHED!";
-            overlay.querySelector('p').innerHTML = Final Coins Collected: <b>${score}</b><br>Hit the button below to try again.;
-            overlay.querySelector('.start-btn').innerText = "Play Again";
+        function drawFood() {
+            ctx.fillStyle = food.type === 'apple' ? '#ff0000' : '#ffe600';
+            ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
         }
+
+        function checkGameOver() {
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            }
+            return snake[0].x < 0  snake[0].x >= canvas.width  snake[0].y < 0 || snake[0].y >= canvas.height;
+        }
+
+        function endGame() {
+            clearInterval(gameInterval);
+            running = false;
+            document.getElementById("startBtn").innerText = "Play Again";
+            ctx.fillStyle = "rgba(0,0,0,0.8)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff007f";
+            ctx.font = "24px 'Courier New'";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER", canvas.width/2, canvas.height/2);
+        }
+
+        document.addEventListener("keydown", e => {
+            if (changingDir) return;
+            if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; changingDir = true; }
+            if (e.key === "ArrowUp" && dy === 0) { dx = 0; dy = -grid; changingDir = true; }
+            if (e.key === "ArrowRight" && dx === 0) { dx = grid; dy = 0; changingDir = true; }
+            if (e.key === "ArrowDown" && dy === 0) { dx = 0; dy = grid; changingDir = true; }
+        });
     </script>
-
 </body>
 </html>
