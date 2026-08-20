@@ -3,316 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXUS-ULTRA // Complete OSINT Suite</title>
+    <title>Cloud Vault // Database & File Storage</title>
+    <!-- Include Supabase JS SDK via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            background-color: #030307;
-            color: #00ff66;
-            font-family: 'Courier New', Courier, monospace;
-            padding: 15px;
-            min-height: 100vh;
-        }
-        header {
-            border-bottom: 2px solid #00ff66;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            background-color: #0f111a;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            justify-content: center;
         }
-        h1 { font-size: 1.3rem; letter-spacing: 2px; text-shadow: 0 0 8px rgba(0, 255, 102, 0.4); }
-        .status { font-size: 0.8rem; color: #00ffff; text-shadow: 0 0 5px rgba(0, 255, 255, 0.4); }
-        
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-            gap: 15px;
-        }
-        .module-card {
-            background: #080812;
-            border: 1px solid #00ff6655;
-            padding: 15px;
-            border-radius: 4px;
-            box-shadow: inset 0 0 10px rgba(0, 255, 102, 0.05);
-        }
-        .module-card h2 {
-            font-size: 0.95rem;
-            margin-bottom: 10px;
-            color: #00ffff;
-            border-bottom: 1px dashed #00ffff44;
-            padding-bottom: 4px;
-        }
-        .form-group { margin-bottom: 10px; }
-        label { display: block; margin-bottom: 4px; font-size: 0.75rem; color: #8892b0; }
-        input, select, textarea {
+        .container {
             width: 100%;
-            padding: 8px;
-            background: #020205;
-            border: 1px solid #00ff66;
-            color: #00ff66;
-            font-family: 'Courier New', Courier, monospace;
-            font-size: 0.85rem;
-            outline: none;
+            max-width: 600px;
         }
-        input:focus, select:focus { border-color: #00ffff; box-shadow: 0 0 5px rgba(0, 255, 255, 0.3); }
+        h1 { margin-bottom: 20px; font-size: 1.5rem; color: #38bdf8; }
+        .card {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: #94a3b8; }
+        textarea, input[type="file"] {
+            width: 100%;
+            padding: 10px;
+            background: #0f111a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+        textarea { resize: vertical; height: 80px; }
         .btn {
-            background: #00ff66;
-            color: #030307;
+            background: #38bdf8;
+            color: #0f111a;
             border: none;
-            padding: 8px 12px;
+            padding: 10px 15px;
             font-weight: bold;
             cursor: pointer;
-            text-transform: uppercase;
+            border-radius: 4px;
             width: 100%;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
             transition: 0.2s;
         }
-        .btn:hover { background: #00ffff; box-shadow: 0 0 8px #00ffff; }
-        .output-box {
-            background: #010103;
-            border: 1px solid #222;
-            padding: 10px;
-            height: 140px;
-            overflow-y: auto;
-            font-size: 0.75rem;
-            color: #00ff66;
-            white-space: pre-wrap;
-            margin-top: 10px;
+        .btn:hover { background: #0ea5e9; }
+        .vault-item {
+            background: #0f111a;
+            border: 1px solid #334155;
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 10px;
+            word-break: break-all;
         }
-        .highlight { color: #00ffff; }
-        .danger { color: #ff0055; }
-        .warning { color: #ffe600; }
+        .vault-item p { margin-bottom: 8px; font-size: 0.95rem; }
+        .vault-item a { color: #38bdf8; font-size: 0.85rem; text-decoration: none; }
+        .vault-item a:hover { text-decoration: underline; }
+        .status { margin-top: 10px; font-size: 0.85rem; color: #34d399; text-align: center; }
     </style>
 </head>
 <body>
 
-    <header>
-        <h1>// NEXUS-ULTRA: ALL-DOMAIN OSINT SUITE</h1>
-        <div class="status">STATUS: ONLINE // FULL SPECTRUM ACTIVE</div>
-    </header>
-
-    <div class="dashboard-grid">
-
-        <!-- 1. CYBER THREAT INTEL: IP & Infrastructure -->
-        <div class="module-card">
-            <h2>01. INFRASTRUCTURE & IP TRACE</h2>
+    <div class="container">
+        <h1>// CLOUD STORAGE VAULT</h1>
+        
+        <!-- Upload Card -->
+        <div class="card">
             <div class="form-group">
-                <label>Target IP (Leave blank for local self-check)</label>
-                <input type="text" id="ipInput" placeholder="e.g. 1.1.1.1">
+                <label>Text Note / Entry</label>
+                <textarea id="noteInput" placeholder="Type text to save to database..."></textarea>
             </div>
-            <button class="btn" onclick="runIPTrace()">Execute IP Trace</button>
-            <div class="output-box" id="ipOutput">> Ready for network query...</div>
+            <div class="form-group">
+                <label>File Upload (Image, PDF, Document)</label>
+                <input type="file" id="fileInput">
+            </div>
+            <button class="btn" onclick="saveToVault()">Upload to Database & Storage</button>
+            <div class="status" id="statusMessage"></div>
         </div>
 
-        <!-- 2. DIGITAL FOOTPRINT: Username Matrix -->
-        <div class="module-card">
-            <h2>02. DIGITAL FOOTPRINT SCANNER</h2>
-            <div class="form-group">
-                <label>Target Handle / Username</label>
-                <input type="text" id="usernameInput" placeholder="e.g. target_alias">
-            </div>
-            <button class="btn" onclick="runUsernameScan()">Query Public Footprint</button>
-            <div class="output-box" id="usernameOutput">> Ready for handle tracking...</div>
+        <!-- Retrieved Database Entries Card -->
+        <div class="card">
+            <h1>Vault Entries</h1>
+            <div id="vaultList">Loading entries from database...</div>
         </div>
-
-        <!-- 3. NETWORK DEFENSE: DNS Resolver -->
-        <div class="module-card">
-            <h2>03. DNS & THREAT DOMAIN RESOLVER</h2>
-            <div class="form-group">
-                <label>Domain Name</label>
-                <input type="text" id="domainInput" placeholder="e.g. example.com">
-            </div>
-            <button class="btn" onclick="runDNSLookup()">Analyze DNS Records</button>
-            <div class="output-box" id="dnsOutput">> Ready for domain target...</div>
-        </div>
-
-        <!-- 4. JOURNALISM / ASSET TRACKING: Live Flight Radar -->
-        <div class="module-card">
-            <h2>04. GLOBAL FLIGHT TRACKER (OSKY)</h2>
-            <div class="form-group">
-                <label>Fetch Live Global Airborne Traffic</label>
-            </div>
-            <button class="btn" onclick="fetchLiveFlights()">Scan Live Aircraft</button>
-            <div class="output-box" id="flightOutput">> Pulling active open-sky telemetry...</div>
-        </div>
-
-        <!-- 5. CORP DUE DILIGENCE: Corporate Registry Simulator -->
-        <div class="module-card">
-            <h2>05. CORPORATE DUE DILIGENCE</h2>
-            <div class="form-group">
-                <label>Company Name / Entity</label>
-                <input type="text" id="corpInput" placeholder="e.g. Acme Corp LLC">
-            </div>
-            <button class="btn" onclick="runCorpCheck()">Query Registry Vetting</button>
-            <div class="output-box" id="corpOutput">> Ready for entity background check...</div>
-        </div>
-
-        <!-- 6. THREAT INTEL: Code Leak & Secret Keyword Finder -->
-        <div class="module-card">
-            <h2>06. SECRET / LEAK PATTERN SCANNER</h2>
-            <div class="form-group">
-                <label>Paste Code / Text snippet to scan</label>
-                <textarea id="leakInput" rows="2" placeholder="Paste config text here..."></textarea>
-            </div>
-            <button class="btn" onclick="scanForLeaks()">Scan for Hardcoded Secrets</button>
-            <div class="output-box" id="leakOutput">> Analyzing syntax patterns...</div>
-        </div>
-
-        <!-- 7. EVIDENCE ANALYSIS: Metadata Inspector -->
-        <div class="module-card">
-            <h2>07. EVIDENCE METADATA INSPECTOR</h2>
-            <div class="form-group">
-                <label>Upload File / Image Sample</label>
-                <input type="file" id="fileInput" onchange="inspectFile()" style="padding:4px;">
-            </div>
-            <div class="output-box" id="fileOutput">> Upload sample file to inspect headers...</div>
-        </div>
-
-        <!-- 8. INVESTIGATION DOSSIER -->
-        <div class="module-card">
-            <h2>08. CASE DOSSIER & ARTIFACT LOG</h2>
-            <div class="form-group">
-                <label>Active Notes & Incident Report</label>
-                <textarea id="dossierNotes" rows="3" placeholder="Compile findings here..."></textarea>
-            </div>
-            <button class="btn" onclick="saveDossier()">Commit to Local Cache</button>
-            <div class="output-box" id="dossierOutput">> Notes cached locally.</div>
-        </div>
-
     </div>
 
     <script>
-        // 1. IP Trace
-        async function runIPTrace() {
-            let ip = document.getElementById("ipInput").value.trim();
-            let box = document.getElementById("ipOutput");
-            box.innerHTML = "> Tracing routing path...\n";
+        // REPLACE THESE WITH YOUR ACTUAL SUPABASE PROJECT CREDENTIALS (from supabase.com)
+        const SUPABASE_URL = 'YOUR_SUPABASE_URL_HERE';
+        const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY_HERE';
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function saveToVault() {
+            const noteText = document.getElementById('noteInput').value.trim();
+            const fileInput = document.getElementById('fileInput').files[0];
+            const statusEl = document.getElementById('statusMessage');
+
+            if (!noteText && !fileInput) {
+                alert("Please add at least a note or select a file.");
+                return;
+            }
+
+            statusEl.innerText = "Processing upload...";
+            let fileUrl = null;
+
             try {
-                let res = await fetch(`https://ipapi.co/${ip}/json/`);
-                let data = await res.json();
-                if (data.error) throw new Error(data.reason || "Lookup failed.");
-                box.innerHTML += `<span class="highlight">[+] TARGET INFRASTRUCTURE:</span>\n`;
-                box.innerHTML += ` - IP: ${data.ip}\n - Location: ${data.city}, ${data.region}, ${data.country_name}\n - ASN/ISP: ${data.org}\n - Coords: ${data.latitude}, ${data.longitude}`;
+                // 1. If a file was selected, upload it to Supabase Storage bucket named 'vault-files'
+                if (fileInput) {
+                    const fileName = `${Date.now()}_${fileInput.name}`;
+                    const { data: fileData, error: fileError } = await supabase.storage
+                        .from('vault-files')
+                        .upload(fileName, fileInput);
+
+                    if (fileError) throw fileError;
+
+                    // Get the public URL of the uploaded file
+                    const { data: publicUrlData } = supabase.storage
+                        .from('vault-files')
+                        .getPublicUrl(fileData.path);
+                    
+                    fileUrl = publicUrlData.publicUrl;
+                }
+
+                // 2. Save text note and file URL together in a Supabase database table named 'vault_entries'
+                const { error: dbError } = await supabase
+                    .from('vault_entries')
+                    .insert([{ note: noteText, file_url: fileUrl }]);
+
+                if (dbError) throw dbError;
+
+                statusEl.innerText = "Success! Saved to database & storage.";
+                document.getElementById('noteInput').value = '';
+                document.getElementById('fileInput').value = '';
+                loadVaultEntries();
+
             } catch (err) {
-                box.innerHTML += `<span class="danger">[x] Error: ${err.message}</span>`;
+                console.error(err);
+                statusEl.innerText = "Error: " + err.message;
             }
         }
 
-        // 2. Username Scanner
-        async function runUsernameScan() {
-            let user = document.getElementById("usernameInput").value.trim();
-            let box = document.getElementById("usernameOutput");
-            if (!user) { box.innerHTML = "Enter a handle."; return; }
-            box.innerHTML = `> Cross-referencing footprint for "${user}"...\n`;
-            try {
-                let res = await fetch(`https://api.github.com/users/${user}`);
-                if (res.ok) {
-                    let data = await res.json();
-                    box.innerHTML += `<span class="highlight">[+] GitHub Profile Found:</span>\n - Repos: ${data.public_repos}, Followers: ${data.followers}\n`;
-                } else {
-                    box.innerHTML += `[-] GitHub: Not detected\n`;
+        async function loadVaultEntries() {
+            const listEl = document.getElementById('vaultList');
+            
+            // Query data from the 'vault_entries' table ordered by newest first
+            const { data, error } = await supabase
+                .from('vault_entries')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                listEl.innerHTML = "Error loading entries (Check database table setup).";
+                return;
+            }
+
+            if (data.length === 0) {
+                listEl.innerHTML = "Vault is empty.";
+                return;
+            }
+
+            listEl.innerHTML = "";
+            data.forEach(item => {
+                let div = document.createElement('div');
+                div.className = 'vault-item';
+                div.innerHTML = `<p>${item.note || '<i>No text note</i>'}</p>`;
+                if (item.file_url) {
+                    div.innerHTML += `<a href="${item.file_url}" target="_blank">🔗 View Attached File</a>`;
                 }
-            } catch { box.innerHTML += `[-] GitHub lookup error\n`; }
-            box.innerHTML += `[*] Target URL Matrix:\n - X: x.com/${user}\n - Reddit: reddit.com/user/${user}`;
+                listEl.appendChild(div);
+            });
         }
 
-        // 3. DNS Lookup
-        async function runDNSLookup() {
-            let domain = document.getElementById("domainInput").value.trim();
-            let box = document.getElementById("dnsOutput");
-            if (!domain) { box.innerHTML = "Enter a domain."; return; }
-            box.innerHTML = `> Querying Google DoH for ${domain}...\n`;
-            try {
-                let res = await fetch(`https://dns.google/resolve?name=${domain}&type=A`);
-                let data = await res.json();
-                if (data.Answer) {
-                    box.innerHTML += `<span class="highlight">[+] Resolved IP Records:</span>\n`;
-                    data.Answer.forEach(a => box.innerHTML += ` - ${a.data}\n`);
-                } else {
-                    box.innerHTML += `[-] No A records found.`;
-                }
-            } catch { box.innerHTML += `<span class="danger">[x] Query failed</span>`; }
-        }
-
-        // 4. Live Flight Radar (OpenSky API)
-        async function fetchLiveFlights() {
-            let box = document.getElementById("flightOutput");
-            box.innerHTML = "> Connecting to OpenSky public telemetry stream...\n";
-            try {
-                let res = await fetch(`https://opensky-network.org/api/states/all?lamin=24&lomin=35&lamax=38&lomax=48`); // Example regional bounds
-                let data = await res.json();
-                if (data && data.states) {
-                    box.innerHTML += `<span class="highlight">[+] Live Aircraft Detected: ${data.states.length} active in sector</span>\n`;
-                    for (let i = 0; i < Math.min(3, data.states.length); i++) {
-                        let flight = data.states[i];
-                        box.innerHTML += ` - CallSign: ${flight[1].trim() || 'N/A'} | Country: ${flight[2]} | Alt: ${Math.round(flight[7] || 0)}m\n`;
-                    }
-                } else {
-                    box.innerHTML += `[-] Telemetry stream limited or sector clear.`;
-                }
-            } catch (err) {
-                box.innerHTML += `<span class="warning">[!] API rate-limited or restricted by CORS browser policy. Simulating sample feed:</span>\n` +
-                                 ` - Flight OSC-492 | Origin: International | Alt: 9400m | Speed: 820km/h\n` +
-                                 ` - Flight TRN-108 | Origin: Regional | Alt: 3100m | Speed: 410km/h`;
-            }
-        }
-
-        // 5. Corporate Due Diligence
-        function runCorpCheck() {
-            let corp = document.getElementById("corpInput").value.trim();
-            let box = document.getElementById("corpOutput");
-            if (!corp) { box.innerHTML = "Enter entity name."; return; }
-            box.innerHTML = `> Searching corporate registry simulations for "${corp}"...\n`;
-            setTimeout(() => {
-                box.innerHTML += `<span class="highlight">[+] ENTITY PROFILE:</span>\n` +
-                                 ` - Status: Active Standing (Simulated Registry)\n` +
-                                 ` - Registered Agent: Verified Legal Entity\n` +
-                                 ` - Risk Flag: Zero public compliance violations detected.`;
-            }, 600);
-        }
-
-        // 6. Secret / Leak Pattern Scanner
-        function scanForLeaks() {
-            let text = document.getElementById("leakInput").value;
-            let box = document.getElementById("leakOutput");
-            box.innerHTML = `> Scanning code patterns for secrets...\n`;
-            let leaksFound = [];
-            if (text.includes("AKIA") || text.includes("api_key") || text.includes("password") || text.includes("secret")) {
-                leaksFound.push("Potential hardcoded API key or credential pattern detected!");
-            }
-            if (leaksFound.length > 0) {
-                box.innerHTML += `<span class="danger">[!] VULNERABILITY ALERT:</span>\n`;
-                leaksFound.forEach(l => box.innerHTML += ` - ${l}\n`);
-            } else {
-                box.innerHTML += `<span class="highlight">[+] Clean. No hardcoded leak strings flagged.</span>`;
-            }
-        }
-
-        // 7. Metadata Inspector
-        function inspectFile() {
-            let file = document.getElementById("fileInput").files[0];
-            let box = document.getElementById("fileOutput");
-            if (!file) return;
-            box.innerHTML = `<span class="highlight">[+] FILE INGESTED:</span>\n` +
-                            ` - Name: ${file.name}\n` +
-                            ` - Size: ${(file.size / 1024).toFixed(2)} KB\n` +
-                            ` - Type: ${file.type || 'Binary/Unknown'}\n` +
-                            ` - Modified: ${new Date(file.lastModified).toUTCString()}`;
-        }
-
-        // 8. Dossier Storage
-        function saveDossier() {
-            let notes = document.getElementById("dossierNotes").value;
-            localStorage.setItem("osint_master_dossier", notes);
-            document.getElementById("dossierOutput").innerHTML = `<span class="highlight">[+] Dossier saved to browser cache successfully.</span>`;
-        }
-
-        window.onload = function() {
-            let saved = localStorage.getItem("osint_master_dossier");
-            if (saved) document.getElementById("dossierNotes").value = saved;
-        }
+        // Load entries when page opens
+        loadVaultEntries();
     </script>
 </body>
 </html>
