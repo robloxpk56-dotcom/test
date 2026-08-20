@@ -1,35 +1,75 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to My Site</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
+}
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (!gameActive) return;
+
+            // Smooth ship movement between lanes
+            shipX += (targetShipX - shipX) * 0.2;
+            ship.position.x = shipX;
+            ship.rotation.z = - (shipX - targetShipX) * 0.5;
+
+            spawnEntities();
+
+            // Move and check Coins
+            for (let i = coins.length - 1; i >= 0; i--) {
+                coins[i].position.z += speed;
+                coins[i].rotation.y += 0.05;
+
+                // Collision detection with player
+                if (coins[i].position.z > -0.5 && coins[i].position.z < 0.5) {
+                    if (Math.abs(coins[i].position.x - ship.position.x) < 0.6) {
+                        scene.remove(coins[i]);
+                        coins.splice(i, 1);
+                        score += 10;
+                        document.getElementById('coin-count').innerText = score;
+                        if (score > highScore) {
+                            highScore = score;
+                            document.getElementById('high-score').innerText = highScore;
+                        }
+                        speed += 0.005; // Gradually speed up game
+                        continue;
+                    }
+                }
+
+                // Remove out of bounds
+                if (coins[i] && coins[i].position.z > 5) {
+                    scene.remove(coins[i]);
+                    coins.splice(i, 1);
+                }
+            }
+
+            // Move and check Obstacles
+            for (let i = obstacles.length - 1; i >= 0; i--) {
+                obstacles[i].position.z += speed;
+                obstacles[i].rotation.x += 0.02;
+
+                // Crash detection
+                if (obstacles[i].position.z > -0.5 && obstacles[i].position.z < 0.5) {
+                    if (Math.abs(obstacles[i].position.x - ship.position.x) < 0.6) {
+                        gameOver();
+                    }
+                }
+
+                if (obstacles[i] && obstacles[i].position.z > 5) {
+                    scene.remove(obstacles[i]);
+                    obstacles.splice(i, 1);
+                }
+            }
+
+            renderer.render(scene, camera);
         }
-        .container {
-            text-align: center;
-            padding: 40px;
-            background: #1e293b;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+
+        function gameOver() {
+            gameActive = false;
+            const overlay = document.getElementById('overlay');
+            overlay.style.display = 'flex';
+            overlay.querySelector('h1').innerText = "CRASHED!";
+            overlay.querySelector('p').innerHTML = Final Coins Collected: <b>${score}</b><br>Hit the button below to try again.;
+            overlay.querySelector('.start-btn').innerText = "Play Again";
         }
-        h1 { color: #38bdf8; margin-bottom: 10px; }
-        p { color: #94a3b8; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>Hello World!</h1>
-        <p>This website is up and running successfully.</p>
-    </div>
+    </script>
+
 </body>
 </html>
