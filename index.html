@@ -1,48 +1,111 @@
-x === food.x && head.y === food.y) {
-                if (food.type === 'apple') {
-                    score += 10;
-                } else {
-                    coinCount += 1;
-                    score += 25;
-                }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Snake | Arcade Vault</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background-color: #0c0a1d;
+            color: #ffffff;
+            font-family: 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        h1 { color: #00f0ff; text-shadow: 0 0 10px #00f0ff; margin-bottom: 5px; letter-spacing: 2px; }
+        .scoreboard { display: flex; gap: 30px; font-size: 1.2rem; color: #ffe600; margin-bottom: 15px; font-weight: bold; }
+        canvas { border: 2px solid #00f0ff; background-color: #03010f; box-shadow: 0 0 20px rgba(0, 240, 255, 0.2); }
+        .btn {
+            margin-top: 15px; background: #ff007f; color: white; border: none; padding: 10px 25px;
+            font-weight: bold; cursor: pointer; text-transform: uppercase; box-shadow: 0 0 10px #ff007f;
+            letter-spacing: 1px; transition: 0.2s;
+        }
+        .btn:hover { background: #ff3399; transform: scale(1.05); }
+        .instructions { margin-top: 10px; color: #a09cb0; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <h1>NEON SNAKE</h1>
+    <div class="scoreboard">
+        <div>SCORE: <span id="score">0</span></div>
+        <div>COINS: <span id="coins">0</span></div>
+    </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <button class="btn" id="startBtn" onclick="startGame()">Start Game</button>
+    <div class="instructions">Use Arrow Keys. Red = Apple (+10), Yellow = Coin (+25).</div>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const grid = 20;
+        let snake = [{x: 160, y: 200}, {x: 140, y: 200}, {x: 120, y: 200}];
+        let food = {x: 0, y: 0, type: 'apple'};
+        let dx = grid, dy = 0, score = 0, coinCount = 0, gameInterval = null, changingDir = false, running = false;
+
+        function startGame() {
+            if (running) return;
+            snake = [{x: 160, y: 200}, {x: 140, y: 200}, {x: 120, y: 200}];
+            score = 0; coinCount = 0; dx = grid; dy = 0; running = true;
+            document.getElementById("score").innerText = score;
+            document.getElementById("coins").innerText = coinCount;
+            document.getElementById("startBtn").innerText = "Playing...";
+            spawnFood();
+            if (gameInterval) clearInterval(gameInterval);
+            gameInterval = setInterval(main, 100);
+        }
+
+        function main() {
+            if (checkGameOver()) { endGame(); return; }
+            changingDir = false;
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        function clearCanvas() { ctx.fillStyle = "#03010f"; ctx.fillRect(0, 0, canvas.width, canvas.height); }
+        function drawSnake() {
+            snake.forEach((part, index) => {
+                ctx.fillStyle = index === 0 ? "#00f0ff" : "#ff007f";
+                ctx.fillRect(part.x, part.y, grid - 2, grid - 2);
+            });
+        }
+        function moveSnake() {
+            const head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+            if (head.x === food.x && head.y === food.y) {
+                if (food.type === 'apple') { score += 10; } else { coinCount += 1; score += 25; }
                 document.getElementById("score").innerText = score;
                 document.getElementById("coins").innerText = coinCount;
                 spawnFood();
-            } else {
-                snake.pop();
-            }
+            } else { snake.pop(); }
         }
-
         function spawnFood() {
             food.x = Math.floor(Math.random() * (canvas.width / grid)) * grid;
             food.y = Math.floor(Math.random() * (canvas.height / grid)) * grid;
             food.type = Math.random() < 0.3 ? 'coin' : 'apple';
         }
-
         function drawFood() {
             ctx.fillStyle = food.type === 'apple' ? '#ff0000' : '#ffe600';
             ctx.fillRect(food.x, food.y, grid - 2, grid - 2);
         }
-
         function checkGameOver() {
             for (let i = 4; i < snake.length; i++) {
                 if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
             }
-            return snake[0].x < 0  snake[0].x >= canvas.width  snake[0].y < 0 || snake[0].y >= canvas.height;
+            return snake[0].x < 0 || snake[0].x >= canvas.width || snake[0].y < 0 || snake[0].y >= canvas.height;
         }
-
         function endGame() {
             clearInterval(gameInterval);
             running = false;
             document.getElementById("startBtn").innerText = "Play Again";
-            ctx.fillStyle = "rgba(0,0,0,0.85)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = "#ff007f";
-            ctx.font = "bold 24px 'Courier New'";
-            ctx.textAlign = "center";
+            ctx.fillStyle = "rgba(0,0,0,0.85)"; ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ff007f"; ctx.font = "bold 24px 'Courier New'"; ctx.textAlign = "center";
             ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2);
         }
-
         document.addEventListener("keydown", e => {
             if (changingDir) return;
             if (e.key === "ArrowLeft" && dx === 0) { dx = -grid; dy = 0; changingDir = true; }
